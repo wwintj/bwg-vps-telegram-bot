@@ -3,17 +3,16 @@
 *.env
 
 # Databases
-.db
-data/.db
+*.db
+data/*.db
 data/bot.db
 
-# Backups & Logs
+# Backups & logs
 backups/
 logs/
 *.log
 
 # Python cache & environments
-pycache/
 __pycache__/
 *.pyc
 *.pyo
@@ -36,16 +35,16 @@ dist/
 .coverage
 htmlcov/
 
-# OS & Editor configurations
+# OS & editor files
 .DS_Store
 .idea/
 .vscode/
 
-# Temporary & Backup files
+# Temporary & backup files
 *.bak
 *.backup
 *.swp
 *.tmp
 
-# Exceptions
+# Keep empty data directory
 !data/.gitkeep
