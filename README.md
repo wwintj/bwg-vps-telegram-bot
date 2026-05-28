@@ -1,50 +1,64 @@
-[中文文档](README.zh-CN.md)
-
 # BWG VPS Telegram Bot
 
-A Telegram bot for managing and monitoring multiple BandwagonHost / KiwiVM VPS instances.
+一个用于管理和监控 BandwagonHost / KiwiVM VPS 的 Telegram 机器人。
 
-## Project Introduction
+## 项目简介
 
-This project provides a self-hosted Telegram bot that acts as a lightweight client for the BandwagonHost (KiwiVM) API. It allows server administrators to check bandwidth usage, monitor server status, and execute power operations directly from within Telegram without logging into the web panel.
+本项目提供一个可自托管的 Telegram 机器人，用作 BandwagonHost / KiwiVM API 的轻量客户端。管理员可以在 Telegram 中管理多台 VPS、查看服务器信息，并执行常见的电源操作。
 
-## Features
+## 当前已实现
 
-- Add VPS from Telegram menu
-- Edit VPS
-- Delete VPS
-- Query traffic usage
-- Query next traffic reset time
-- Query VPS status
-- Query expiry date if manually configured
-- Start VPS
-- Stop VPS
-- Restart VPS
-- Kill VPS with confirmation
-- Manage multiple VPS instances
-- Admin-only access
+- Telegram Bot 基础启动入口
+- `.env` 配置读取
+- 管理员 ID 白名单校验
+- SQLite 数据库初始化
+- VPS 数据表结构与平滑字段升级
+- `/start` 主菜单
+- 添加 VPS
+- 删除 VPS
+- VPS 列表
+- 查询单台 VPS 流量与配置信息
+- 查询全部 VPS 概况
+- 开机
+- 关机
+- 重启
+- 强制关机，并加入二次确认
+- 迁移机房，并加入二次确认
+- SSH 端口连通性探测
+- Ubuntu / Debian 一键安装脚本
+- systemd 服务部署脚本
+- 更新脚本与卸载脚本
 
-## Security Notice
+## 后续可增强功能
 
-- The installer only asks for `TELEGRAM_BOT_TOKEN`, `ADMIN_USER_IDS`, and `TIMEZONE`.
-- The installer does not ask for BandwagonHost VEID or API_KEY.
-- VEID and API_KEY are added later inside the Telegram Bot menu.
-- `.env` must never be committed.
-- `data/bot.db` must never be committed.
-- `backups/` must never be committed.
-- VEID and API_KEY are stored in the local SQLite database and should be masked in UI and logs.
+- 编辑 VPS
+- 定时流量提醒
+- 到期时间提醒
+- 流量使用率阈值告警
+- API_KEY 加密存储
+- 更细粒度的管理员权限
 
-## Requirements
+## 安全说明
+
+- 安装脚本只要求输入 `TELEGRAM_BOT_TOKEN`、`ADMIN_USER_IDS` 和 `TIMEZONE`。
+- 安装脚本不会要求输入 BandwagonHost / KiwiVM 的 `VEID` 或 `API_KEY`。
+- `VEID` 和 `API_KEY` 应在机器人功能中添加，并保存在本地 SQLite 数据库。
+- 不要提交 `.env`。
+- 不要提交 `data/bot.db`。
+- 不要提交 `backups/`。
+- 日志和界面中应避免明文展示 `API_KEY`。
+
+## 系统要求
 
 - Ubuntu 22.04 / Ubuntu 24.04 / Debian 11 / Debian 12
 - Python 3.10+
 - Telegram Bot Token
-- Telegram User ID
-- BandwagonHost / KiwiVM VEID and API_KEY for each VPS
+- Telegram 管理员 User ID
+- 每台 VPS 的 BandwagonHost / KiwiVM `VEID` 和 `API_KEY`
 
-## Installation Methods
+## 安装方式
 
-### Method 1: Local Git Clone
+### 本地克隆安装
 
 ```bash
 git clone https://github.com/wwintj/bwg-vps-telegram-bot.git
@@ -52,56 +66,72 @@ cd bwg-vps-telegram-bot
 sudo bash install.sh
 ```
 
-### Method 2: Curl One-Click Script
-
-*Please note: The curl installation method only works after the project files have been pushed to the GitHub main branch.*
+### 一键脚本安装
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/wwintj/bwg-vps-telegram-bot/main/install.sh)
 ```
 
-## What the Installer Asks For
+## 安装脚本会要求输入
 
 - `TELEGRAM_BOT_TOKEN`
 - `ADMIN_USER_IDS`
 - `TIMEZONE`
 
-## What the Installer Does Not Ask For
+## 安装脚本不会要求输入
 
-- BandwagonHost VEID
-- BandwagonHost API_KEY
+- BandwagonHost / KiwiVM `VEID`
+- BandwagonHost / KiwiVM `API_KEY`
 
-## Configuration File Location
+## 配置文件
 
-`/opt/bwg-vps-telegram-bot/.env`
+默认配置文件位置：
 
-## Database Location
+```text
+/opt/bwg-vps-telegram-bot/.env
+```
 
-`/opt/bwg-vps-telegram-bot/data/bot.db`
+示例配置：
 
-## Prerequisites Procurement Guide
+```env
+TELEGRAM_BOT_TOKEN=
+ADMIN_USER_IDS=
+DATABASE_PATH=./data/bot.db
+TIMEZONE=Asia/Shanghai
+KIWIVM_API_BASE=https://api.64clouds.com/v1
+LOG_LEVEL=INFO
+REQUEST_TIMEOUT=20
+```
 
-### How to get Telegram Bot Token
-Use @BotFather.
+## 数据库
 
-### How to get Telegram User ID
-Use @userinfobot or a similar bot.
+默认数据库位置：
 
-### How to get BandwagonHost VEID and API_KEY
-Log in to BandwagonHost / KiwiVM control panel and check the API page for each VPS.
+```text
+/opt/bwg-vps-telegram-bot/data/bot.db
+```
 
-## Usage After Installation
+当前 `vps_instances` 表字段：
 
-1. Open Telegram
-2. Send `/start` to the bot
-3. Use Add VPS menu
-4. Enter VPS name
-5. Enter VEID
-6. Enter API_KEY
-7. Query traffic, status, reset time, expiry date
-8. Start, stop, restart, or kill VPS with confirmation
+- `id`
+- `name`
+- `veid`
+- `api_key`
+- `ssh_port`
+- `note`
+- `expiry_date`
 
-## Service Management Commands
+## 使用方式
+
+安装并启动服务后，在 Telegram 中向机器人发送：
+
+```text
+/start
+```
+
+当前版本支持添加 VPS、查看 VPS 列表、查询流量、查询全部 VPS 概况，以及执行开机、关机、重启、强制关机和机房迁移操作。
+
+## systemd 服务管理
 
 ```bash
 sudo systemctl status bwg-vps-telegram-bot --no-pager
@@ -110,64 +140,81 @@ sudo systemctl restart bwg-vps-telegram-bot
 sudo systemctl stop bwg-vps-telegram-bot
 ```
 
-## Update
+## 更新
 
 ```bash
 cd /opt/bwg-vps-telegram-bot
 sudo bash update.sh
 ```
 
-## Uninstall
+更新脚本会在拉取最新代码前备份 `.env` 和 `data/`。
+
+## 卸载
 
 ```bash
 cd /opt/bwg-vps-telegram-bot
 sudo bash uninstall.sh
 ```
 
-- **Normal uninstall**: removes the systemd service but keeps `.env` and `data/bot.db`.
-- **Full uninstall**: removes everything after typing DELETE.
+- 普通卸载：删除 systemd 服务，保留 `.env` 和 `data/bot.db`。
+- 完全卸载：确认后删除安装目录和本地数据。
 
-## Project Structure
+## 项目结构
 
 ```text
 bwg-vps-telegram-bot/
 ├── .env.example
 ├── .gitignore
 ├── README.md
-├── README.zh-CN.md
 ├── install.sh
 ├── uninstall.sh
 ├── update.sh
 ├── requirements.txt
 ├── app/
+│   ├── __init__.py
 │   ├── main.py
 │   ├── config.py
 │   ├── database.py
 │   ├── utils.py
 │   ├── handlers/
+│   │   ├── __init__.py
 │   │   ├── start.py
 │   │   ├── vps_manage.py
 │   │   ├── query.py
 │   │   └── control.py
-│   ├── services/
-│   │   ├── kiwivm_client.py
-│   │   └── formatter.py
-│   └── repositories/
-│       └── vps_repository.py
+│   ├── repositories/
+│   │   ├── __init__.py
+│   │   └── vps_repository.py
+│   └── services/
+│       ├── __init__.py
+│       ├── formatter.py
+│       └── kiwivm_client.py
 └── data/
     └── .gitkeep
 ```
 
-## Troubleshooting
+## 常见问题
 
-- **Bot does not respond**: Check if the bot token is correct and if the server can access Telegram API.
-- **Permission denied**: Ensure your Telegram User ID is correctly listed in `ADMIN_USER_IDS`.
-- **Wrong Telegram User ID**: Verify your ID with @userinfobot.
-- **systemd service failed**: Check the logs using `journalctl` to identify Python or environment errors.
-- **GitHub curl install fails**: Ensure the repository is public and the `install.sh` file exists on the `main` branch.
-- **SQLite database permission issue**: Ensure the `/opt/bwg-vps-telegram-bot/data` directory has the correct write permissions.
-- **BandwagonHost API error**: Check if your VEID and API_KEY are correct and if your VPS is suspended.
+### 机器人没有响应
 
-## License
+检查 `TELEGRAM_BOT_TOKEN` 是否正确，并确认服务器可以访问 Telegram API。
+
+### 提示没有权限
+
+确认你的 Telegram User ID 已正确填写到 `ADMIN_USER_IDS` 中。多个管理员请使用英文逗号分隔。
+
+### 服务启动失败
+
+使用以下命令查看日志：
+
+```bash
+sudo journalctl -u bwg-vps-telegram-bot -f
+```
+
+### SQLite 权限错误
+
+确认 `data/` 目录存在，并且运行服务的用户有写入权限。
+
+## 许可证
 
 MIT License
